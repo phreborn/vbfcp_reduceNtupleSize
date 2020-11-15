@@ -78,23 +78,23 @@ void getSysList(TChain &tree, TString anchorVar, std::vector<TString> &sysList){
 
 void reduceSysNtupleSize(){
   map<TString, int> sampleID;
-  sampleID["VBF"] = 346214;
-  //sampleID["ggF"] = 343981;
+  //sampleID["VBF"] = 346214;
+  sampleID["ggF"] = 343981;
 
   TString dirpath = "/eos/user/a/ahabouel/VBFCP/";
 
   map<TString,double> lumi;
-  //lumi["mc16a"] = 36207.66;
-  lumi["mc16d"] = 44307.4;
+  lumi["mc16a"] = 36207.66;
+  //lumi["mc16d"] = 44307.4;
   //lumi["mc16e"] = 58450.1;
 
-  //TString specificSys = "";
-  TString specificSys = "VBF_photonallsys";
+  TString specificSys = "";
+  //TString specificSys = "VBF_photonallsys";
 
-  //int iSysInit = 1;
-  int iSysInit = 128;
-  int iSysFin = 9999;
-  //int iSysFin = 9;
+  int iSysInit = 1;
+  //int iSysInit = 128;
+  //int iSysFin = 9999;
+  int iSysFin = 3;
 
   map<TString, vector<TString>> failSysList;
 
@@ -161,10 +161,14 @@ void reduceSysNtupleSize(){
 
           string cuts = Form("%s.isPassed && !isDalitz && %s.N_j_30>1 && %s.m_jj_30/1000>400 && (%s.DeltaEta_jj<-2 || %s.DeltaEta_jj>2) && (%s.Zepp>-5 && %s.Zepp<5) && (%s.catCoup_XGBoost_ttH>=11 && %s.catCoup_XGBoost_ttH<=14)", sysName, sysName, sysName, sysName, sysName, sysName, sysName, sysName, sysName); cout<<"cuts : "<<endl<<cuts<<endl;
 
-          auto df_cut = df.Filter(cuts);
+          auto df_cut = df.Filter(cuts)
+                          .Alias(Form("%s_xsec_kF_eff", sysName), "xsec_kF_eff")
+                          .Alias(Form("%s_WeightDtilde1", sysName), "WeightDtilde1")
+                          .Alias(Form("%s_WeightDtilde2", sysName), "WeightDtilde2")
+                          .Alias(Form("%s_isDalitz", sysName), "isDalitz");
 
-          //string nameVar = sSys+".*";
-          string nameVar = "(^[^\.]+$|^"+sSys+".*$)";
+          string nameVar = sSys+".*";
+          //string nameVar = "(^[^\.]+$|^"+sSys+".*$)";
           df_cut.Snapshot(sSys, Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), sysName), nameVar);
         }// sys
       }// file
