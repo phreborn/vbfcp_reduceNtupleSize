@@ -170,6 +170,22 @@ void reduceSysNtupleSize(){
           string nameVar = sSys+".*";
           //string nameVar = "(^[^\.]+$|^"+sSys+".*$)";
           df_cut.Snapshot(sSys, Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), sysName), nameVar);
+
+          if(sSys=="Nominal"){
+            TFile *f1 = TFile::Open(f.data()); cout<<f.data()<<endl;
+            TFile *f_nom = new TFile(Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), sysName), "update");
+            for(auto k : *f1->GetListOfKeys()) { // refer to io/loopdir11.C
+              TKey *key = static_cast<TKey*>(k);
+              TClass *cl = gROOT->GetClass(key->GetClassName());
+              if (!cl->InheritsFrom("TH1")) continue;
+              TH1 *h = key->ReadObject<TH1>(); cout<<h->GetName()<<endl;
+              f_nom->cd();
+              h->Write();
+            }
+            f_nom->Close();
+            delete f_nom;
+          }
+
         }// sys
       }// file
     }//camp
