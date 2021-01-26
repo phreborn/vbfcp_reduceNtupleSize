@@ -77,24 +77,27 @@ void getSysList(TChain &tree, TString anchorVar, std::vector<TString> &sysList){
 }
 
 void reduceSysNtupleSize(){
+  bool doSys = false;
+
   map<TString, int> sampleID;
-  //sampleID["VBF"] = 346214;
+  sampleID["VBF"] = 346214;
   sampleID["ggF"] = 343981;
 
-  TString dirpath = "/eos/user/a/ahabouel/VBFCP/";
+  //TString dirpath = "/eos/user/a/ahabouel/VBFCP/";
+  TString dirpath = "/eos/atlas/atlascerngroupdisk/phys-higgs/HSG1/VBFCP/h025/";
 
   map<TString,double> lumi;
   lumi["mc16a"] = 36207.66;
-  //lumi["mc16d"] = 44307.4;
-  //lumi["mc16e"] = 58450.1;
+  lumi["mc16d"] = 44307.4;
+  lumi["mc16e"] = 58450.1;
 
   TString specificSys = "";
-  //TString specificSys = "VBF_photonallsys";
+  //TString specificSys = "VBF_photonsys";
 
   int iSysInit = 1;
-  //int iSysInit = 128;
-  //int iSysFin = 9999;
-  int iSysFin = 3;
+  int iSysFin = 9999;
+  //int iSysInit = 78;
+  //int iSysFin = 53;
 
   map<TString, vector<TString>> failSysList;
 
@@ -140,7 +143,8 @@ void reduceSysNtupleSize(){
 
         std::vector<TString> sysList;
         sysList.clear();
-        getSysList(ch, "m_yy", sysList);
+        if(doSys) getSysList(ch, "m_yy", sysList);
+        else sysList.push_back("Nominal");
 
         int test_counter = 0;
         for(auto sys : sysList){
