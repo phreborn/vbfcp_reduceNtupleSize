@@ -76,7 +76,7 @@ void getSysList(TChain &tree, TString anchorVar, std::vector<TString> &sysList){
   }
 }
 
-void reduceSysNtupleSize(){
+void reduceSysNtupleSize(TString spSys, int sysInit, int sysFin){
   bool doSys = true;
 
   map<TString, int> sampleID;
@@ -85,7 +85,7 @@ void reduceSysNtupleSize(){
 
   //TString dirpath = "/eos/user/a/ahabouel/VBFCP/";
   //TString dirpath = "/eos/atlas/atlascerngroupdisk/phys-higgs/HSG1/VBFCP/h025/";
-  TString dirpath = "/eos/user/h/huirun/vbf_cp/h025/sys/";
+  TString dirpath = "/eos/user/h/huirun/vbf_cp/h026/sys/";
 
   map<TString,double> lumi;
   lumi["mc16a"] = 36207.66;
@@ -99,6 +99,10 @@ void reduceSysNtupleSize(){
 
   int iSysInit = 1;
   int iSysFin = 9999;
+
+  specificSys = spSys;
+  iSysInit = sysInit;
+  iSysFin = sysFin;
 
   map<TString, vector<TString>> failSysList;
 
@@ -127,16 +131,25 @@ void reduceSysNtupleSize(){
     int iID = sample.second;
     for(auto mc : lumi){
       TString camp = mc.first; cout<<endl<<sampleName<<" "<<camp<<endl;
+
+      TChain ch("output", "output");
       for(auto f : files){
         if(f.find((sampleName+"_").Data()) == std::string::npos) continue;
         if(f.find(camp.Data()) == std::string::npos) continue;
         if(specificSys!="" && f.find(specificSys.Data()) == std::string::npos) continue;
-        TString filepath = f.data(); cout<<endl<<filepath<<endl;
-          TChain ch("output", "output");
-          ch.Add(filepath);
+        TString filepath = f.data();
+        ch.Add(filepath); cout<<"chain added: "<<filepath<<endl;
+      }
 
-        TString sysClass = filepath.Replace(filepath.First('/'), filepath.Last('/')-filepath.First('/')+1, "");
-        sysClass = sysClass.ReplaceAll(".root", ""); cout<<sysClass<<endl<<endl;
+      //for(auto f : files){
+        //if(f.find((sampleName+"_").Data()) == std::string::npos) continue;
+        //if(f.find(camp.Data()) == std::string::npos) continue;
+        //if(specificSys!="" && f.find(specificSys.Data()) == std::string::npos) continue;
+        //TString filepath = f.data(); cout<<endl<<filepath<<endl;
+
+        //TString sysClass = filepath.Replace(filepath.First('/'), filepath.Last('/')-filepath.First('/')+1, "");
+        //sysClass = sysClass.ReplaceAll(".root", ""); cout<<sysClass<<endl<<endl;
+        TString sysClass = sampleName+"_"+specificSys;
 
           TString dirName = camp+"/"+sysClass;
           TString tsCommand = "mkdir -p "+dirName;
@@ -147,12 +160,15 @@ void reduceSysNtupleSize(){
         if(doSys) getSysList(ch, "m_yy", sysList);
         else sysList.push_back("Nominal");
 
+        bool nominalProcessed = false;
         int test_counter = 0;
         for(auto sys : sysList){
           test_counter++;
           //if(test_counter != 2) continue;
           if(test_counter < iSysInit || test_counter > iSysFin) continue;
           //if(test_counter > iSysFin) break;
+
+          if(sys == "Nominal") nominalProcessed = true;
 
           char *sysName = (char*)sys.Data();
           string sSys = sys.Data();
@@ -176,23 +192,67 @@ void reduceSysNtupleSize(){
           //string nameVar = "(^[^\.]+$|^"+sSys+".*$)";
           df_cut.Snapshot(sSys, Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), sysName), nameVar);
 
-          if(sSys=="Nominal"){
-            TFile *f1 = TFile::Open(f.data()); cout<<f.data()<<endl;
-            TFile *f_nom = new TFile(Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), sysName), "update");
-            for(auto k : *f1->GetListOfKeys()) { // refer to io/loopdir11.C
-              TKey *key = static_cast<TKey*>(k);
-              TClass *cl = gROOT->GetClass(key->GetClassName());
-              if (!cl->InheritsFrom("TH1")) continue;
-              TH1 *h = key->ReadObject<TH1>(); cout<<h->GetName()<<endl;
-              f_nom->cd();
-              h->Write();
-            }
-            f_nom->Close();
-            delete f_nom;
-          }
+          //if(sSys=="Nominal"){
+          //  TFile *f1 = TFile::Open(f.data()); cout<<f.data()<<endl;
+          //  TFile *f_nom = new TFile(Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), sysName), "update");
+          //  for(auto k : *f1->GetListOfKeys()) { // refer to io/loopdir11.C
+          //    TKey *key = static_cast<TKey*>(k);
+          //    TClass *cl = gROOT->GetClass(key->GetClassName());
+          //    if (!cl->InheritsFrom("TH1")) continue;
+          //    TH1 *h = key->ReadObject<TH1>(); cout<<h->GetName()<<endl;
+          //    f_nom->cd();
+          //    h->Write();
+          //  }
+          //  f_nom->Close();
+          //  delete f_nom;
+          //}
 
         }// sys
-      }// file
+      //}// file
+
+/*** merge mxaod cutflows and save in nominal root file  ***/
+      if(! nominalProcessed) continue;
+      ifstream f(Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), "Nominal"));
+      if(! f.good()) continue;
+
+      TFile *f_nom = new TFile(Form("%s/%i_%s_%s.root", dirName.Data(), iID, sampleName.Data(), "Nominal"), "update");
+
+      std::map<TString, TH1F*> mxaodCutflows;
+      int nFiles = 0;
+      for(auto f : files){
+        if(f.find((sampleName+"_").Data()) == std::string::npos) continue;
+        if(f.find(camp.Data()) == std::string::npos) continue;
+        if(specificSys!="" && f.find(specificSys.Data()) == std::string::npos) continue;
+        TString filepath = f.data();
+        TFile *f1 = TFile::Open(f.data()); cout<<f.data()<<endl;
+        if(nFiles == 0){
+          for(auto k : *f1->GetListOfKeys()){
+            TKey *key = static_cast<TKey*>(k);
+            TClass *cl = gROOT->GetClass(key->GetClassName());
+            if (!cl->InheritsFrom("TH1")) continue;
+            TH1 *h = key->ReadObject<TH1>(); cout<<h->GetName()<<endl;
+            mxaodCutflows[h->GetName()] = (TH1F*) h->Clone((TString)h->GetName());
+          }
+        }else if(nFiles > 0){
+          for(auto k : *f1->GetListOfKeys()){
+            TKey *key = static_cast<TKey*>(k);
+            TClass *cl = gROOT->GetClass(key->GetClassName());
+            if (!cl->InheritsFrom("TH1")) continue;
+            TH1 *h = key->ReadObject<TH1>(); cout<<h->GetName()<<endl;
+            mxaodCutflows[h->GetName()]->Add(h);
+          }
+        }
+        nFiles++;
+      }
+
+      f_nom->cd();
+      for(auto h : mxaodCutflows){
+        h.second->Write();
+      }
+      f_nom->Close();
+      delete f_nom;
+/******/
+
     }//camp
   }// sample
 
