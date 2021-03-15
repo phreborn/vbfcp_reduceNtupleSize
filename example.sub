@@ -1,0 +1,8 @@
+executable              = exe_??.sh
+arguments               = $(ClusterId) $(ProcId)
+output                  = submit_??/log.$(ClusterId).$(ProcId).out
+error                   = submit_??/log.$(ClusterId).$(ProcId).err
+log                     = submit_??/run.$(ClusterId).log
+
++JobFlavour = "workday"
+queue
