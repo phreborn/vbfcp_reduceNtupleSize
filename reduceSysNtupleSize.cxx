@@ -185,7 +185,7 @@ void reduceSysNtupleSize(TString spSys, int sysInit, int sysFin){
             continue;
           }
 
-          string cuts = Form("%s.isPassed && !isDalitz && %s.N_j_30>1 && %s.m_jj_30/1000>400 && (%s.DeltaEta_jj<-2 || %s.DeltaEta_jj>2) && (%s.Zepp>-5 && %s.Zepp<5) && (%s.catCoup_XGBoost_ttH>=11 && %s.catCoup_XGBoost_ttH<=14)", sysName, sysName, sysName, sysName, sysName, sysName, sysName, sysName, sysName); cout<<"cuts : "<<endl<<cuts<<endl;
+          string cuts = Form("%s.isPassed && !isDalitz && %s.N_j_30>1 && %s.m_jj_30/1000>400 && (%s.DeltaEta_jj<-2 || %s.DeltaEta_jj>2) && (%s.Zepp>-5 && %s.Zepp<5)", sysName, sysName, sysName, sysName, sysName, sysName, sysName); cout<<"cuts : "<<endl<<cuts<<endl;
 
           auto df_cut = df.Filter(cuts)
                           .Alias(Form("%s_xsec_kF_eff", sysName), "xsec_kF_eff")
