@@ -5,7 +5,7 @@ allJobs=jobsSub.sh
 
 intvl=9
 for sysClass in jetsys photonallsys1 photonallsys2 photonsys;do
-  for init in 1 11 21 31 41 51 61 71 81 91 101 111;do
+  for init in 1 11 21 31 41 51 61 71 81 91 101;do
 
    #fin=`expr ${init} + ${intvl}`
    fin=$((${init} + ${intvl}))
