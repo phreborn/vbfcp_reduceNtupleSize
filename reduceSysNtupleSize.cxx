@@ -76,7 +76,7 @@ void getSysList(TChain &tree, TString anchorVar, std::vector<TString> &sysList){
   }
 }
 
-void reduceSysNtupleSize(TString spSys, int sysInit, int sysFin){
+void reduceSysNtupleSize(TString spSys, int sysInit, int sysFin, TString dirpath = "/eos/user/h/huirun/vbf_cp/h026/sys/"){
   bool doSys = true;
 
   map<TString, int> sampleID;
@@ -85,7 +85,7 @@ void reduceSysNtupleSize(TString spSys, int sysInit, int sysFin){
 
   //TString dirpath = "/eos/user/a/ahabouel/VBFCP/";
   //TString dirpath = "/eos/atlas/atlascerngroupdisk/phys-higgs/HSG1/VBFCP/h025/";
-  TString dirpath = "/eos/user/h/huirun/vbf_cp/h026/sys/";
+  //TString dirpath = "/eos/user/h/huirun/vbf_cp/h026/sys/";
 
   map<TString,double> lumi;
   lumi["mc16a"] = 36207.66;
